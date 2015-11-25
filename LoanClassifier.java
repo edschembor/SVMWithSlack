@@ -40,7 +40,7 @@ public class LoanClassifier extends Predictor {
 			for(Instance instance : instances) {
 				
 				// Fetch the sample's label.
-				double label = Integer.parseInt(instance.getLabel().toString());
+				double label = Integer.parseInt(instance.getLabel().toString())*2 - 1;
 				
 				// Compute the G term (gradient) - we are using L1 loss function, so D_ii is 0.
 				double GTerm = 0.0;
@@ -49,7 +49,22 @@ public class LoanClassifier extends Predictor {
 				}
 				GTerm--;
 				
+				// Find the so-called projected gradient G^P	
+				if(alpha[j] == 0) {
+					// G = min(0,G)
+				} else if(alpha[j] == 0) {
+					// G = max(0,G)
+				} else {
+					// G = G
+					// do nothing
+				}
+				
 				// Now use the gradient to optimize a^{k,i+1}_i
+				if(GTerm == 0) {
+					// No update needed
+				} else {
+					// a = min( max( a - GTerm/Q , 0) , U)
+				}
 				j++;
 			}
 		}
