@@ -14,6 +14,14 @@ with open(sys.argv[1], 'rb') as csvFile:
     next(reader, None)
     next(reader, None)
     for row in reader:
+
+        if("Paid" in row[16]):
+	    target.write("1 ")
+        elif("Charged" in row[16]):
+	    target.write("0 ")
+        else:
+	    continue
+
         for index in xrange(0, len(row)):
 
             # Immedietly grab the values which do not need formatting.
@@ -42,7 +50,6 @@ with open(sys.argv[1], 'rb') as csvFile:
 
             if index == 26:
                 year = int(row[index].split("-")[1][-2:])
-                print year
                 if(year > 16):
                     delta = 115 - year
                 else:

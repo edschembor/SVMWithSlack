@@ -8,9 +8,9 @@ public class LoanPredictor extends Predictor {
 
 	private int sgd_iterations;
 	private double alpha[];
-	private double weights[];
-	//TODO choose U = C = the margin?
-	private double U;
+	private HashMap<Integer, Double> weights = new HashMap<>();
+	private ArrayList<Integer> supports = new ArrayList<>();
+	private double U = 1.0;
 
 	public LoanPredictor(int sgd_iterations) {
 	    this.sgd_iterations = sgd_iterations;
@@ -21,23 +21,30 @@ public class LoanPredictor extends Predictor {
 	    
 		// There is an alpha for each sample.
 		alpha = new double[instances.size()];
-		// And a weights vector for easy computation of the alphas
-		weights = new double[instances.size()];
 
+		for(Instance instance : instances) {
+			for(Integer integ : instance.getFeatureVector().getMap().keySet()) {
+				weights.put(integ, 0.0);
+			}	
+		}
+		
 		// Iterate over each sample sgd_iterations times
 		// This is the paper's "outer iteration"
 		for(int i = 0; i < sgd_iterations; i++) {
 			
 			// Compute the weights vector.
-			int j = 0;
-			for(Instance instance : instances) {
+			/*int j = 0;
+			for(Instance instance : instances) { //Possible issue?
 				// Fetch the sample's label.
 				double label = Integer.parseInt(instance.getLabel().toString())*2 - 1;
-				weights[j] = label * alpha[j] * 1;
+				double val = 0.0;
+				for(int k : instance.getFeatureVector().getMap().keySet()) {
+					weights.put(k, weights.get(k) + label * alpha[j] * instance.getFeatureVector().get(k));
+				}
 				j++;
-			}
+			}*/
 			
-			j = 0;
+			int j = 0;
 			for(Instance instance : instances) {
 				
 				// Fetch the sample's label.
@@ -45,28 +52,47 @@ public class LoanPredictor extends Predictor {
 				
 				// Compute the G term (gradient) - we are using L1 loss function, so D_ii is 0.
 				double GTerm = 0.0;
-				for(int feature : instance._feature_vector.sparseVector.keySet()) {
-					GTerm += label * weights[j] * instance._feature_vector.get(feature);
+				for(int feature : instance._feature_vector.getMap().keySet()) {
+					GTerm += weights.get(feature) * instance._feature_vector.get(feature);
 				}
+				GTerm *= label;
 				GTerm--;
 				
-				// Find the so-called projected gradient G^P	
+				// Find the so-called projected gradient G^P
+				double projectedGradient = 0.0;
 				if(alpha[j] == 0) {
-					// G = min(0,G)
-				} else if(alpha[j] == 0) {
-					// G = max(0,G)
+					projectedGradient = Math.min(GTerm, 0.0);
+				} else if(alpha[j] == U) {
+					projectedGradient = Math.max(GTerm, 0.0);
 				} else {
-					// G = G
 					// do nothing
 				}
 				
 				// Now use the gradient to optimize a^{k,i+1}_i
-				if(GTerm == 0) {
+				if(projectedGradient == 0) {
 					// No update needed
 				} else {
-					// a = min( max( a - GTerm/Q , 0) , U)
+					double oldAlpha = alpha[j];
+					double Qii = 0.0;
+					for(Integer integ : instance.getFeatureVector().getMap().keySet()) {
+						Qii+= Math.pow(instance.getFeatureVector().get(integ), 2);
+					}
+					alpha[j] = Math.min( Math.max( oldAlpha - GTerm/Qii , 0) , U);
+					
+					// Update the weights vector.
+					for(Integer integ : instance.getFeatureVector().getMap().keySet()) {
+						double update = (alpha[j] - oldAlpha)*label*instance.getFeatureVector().get(integ);
+						double newWeight = weights.get(integ) + update;
+						weights.put(integ, newWeight);
+					}
 				}
 				j++;
+			}
+		}
+		
+		for(int i = 0; i < instances.size(); i++) {
+			if(alpha[i] != 0) {
+				supports.add(i);
 			}
 		}
 		
@@ -74,7 +100,9 @@ public class LoanPredictor extends Predictor {
 
 	@Override
 	public Label predict(Instance instance) {
-		// TODO Auto-generated method stub
+		
+		// TODO
+		
 		return null;
 	}
 
