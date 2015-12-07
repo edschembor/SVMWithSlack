@@ -8,6 +8,8 @@ target2 = open("DataDictionary", "w")
 noFormatting = [2, 3, 4, 7, 13, 24, 25, 30]
 
 first = 1
+one_count = 0
+zero_count = 0
 
 with open(sys.argv[1], 'rb') as csvFile:
     reader = csv.reader(csvFile, delimiter=",")
@@ -16,8 +18,13 @@ with open(sys.argv[1], 'rb') as csvFile:
     for row in reader:
 
         if("Paid" in row[16]):
-	    target.write("1 ")
+            if(one_count < zero_count):
+                one_count+=1
+                target.write("1 ")
+            else:
+                continue
         elif("Charged" in row[16]):
+            zero_count+=1
 	    target.write("0 ")
         else:
 	    continue
@@ -38,6 +45,8 @@ with open(sys.argv[1], 'rb') as csvFile:
                     target.write(str(index) + ":" + "0")
                 elif("+" in row[index]):
                     target.write(str(index) + ":" + "11")
+                elif("n" in row[index]):
+                    target.write(str(index) + ":" + "0")
                 else:
                     target.write(str(index) + ":" + row[index].split(" ")[0])
                 target.write(" ")
@@ -59,7 +68,11 @@ with open(sys.argv[1], 'rb') as csvFile:
 
             if index == 33:
                 val = row[index].rstrip("%")
+                if(str(val) == ""):
+                    val = 0
                 target.write(str(index) + ":" + str(val))
+
+        target.write(" 50:10")
 
 
         target.write("\n")
