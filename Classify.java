@@ -66,74 +66,25 @@ public class Classify {
 	private static Predictor train(List<Instance> instances, String algorithm) {
 		// Train the model using "algorithm" on "data"
 		Predictor trainedPredictor = null;
-		
-		if(algorithm.equals("majority")) {
-		// Anonymous inner class for the majority predictor
-		Predictor majorityPredictor = new Predictor() {
-			int binaryMajority = 0;
-			public void train(List<Instance> instances) {
-				int ones = 0, zeros = 0;
-				for(Instance inst: instances) {
-					if (inst.getLabel().toString().equals("1")){
-						ones++;
-					} else if (inst.getLabel().toString().equals("0")) {
-						zeros++;
-					} else {
-						System.out.println("Bad Label");
-						System.exit(0);
-					}
-				}
-				if(ones >= zeros) { 
-					//System.out.println("chose ones");
-					binaryMajority = 1; 
-				} else { 
-					//System.out.println("chose zeros");
-					binaryMajority = 0; 
-				}
-			}
-			
-			public Label predict(Instance inst) {
-				return new ClassificationLabel(binaryMajority);
-			}
-		}; // end anonymous inner class
-		trainedPredictor = majorityPredictor;
-		} // end if majority
-		
-		else if(algorithm.equals("even_odd")) {
-		// Anonymous inner class for the even/odd predictor
-		Predictor evenOddPredictor = new Predictor() {
-			int evenOddWinner;
-			public void train(List<Instance> instances) {
-				// Nothing to do in training
-			}
-
-			public Label predict(Instance inst) {
-				double evens = 0, odds = 0;
-				FeatureVector fv = inst.getFeatureVector();
-				for(Integer idx : fv.getMap().keySet()) {
-					if ((idx % 2) == 1) {
-						odds += fv.get(idx); 
-					} else { 
-						evens += fv.get(idx); 
-					}
-				}
-
-				if(evens >= odds) { 
-					return new ClassificationLabel(1); 
-				} else { 
-					return new ClassificationLabel(0); 
-				}
-			}
-		}; //end anonymous inner class
-		trainedPredictor = evenOddPredictor;
-		} // end if even/odd
-		else { System.out.println("bad algorithm type"); System.exit(0); }	
+        trainedPredictor = new LoanPredictor(10, 8E-11, 77000);
+        trainedPredictor.train(instances);
 		
 		// Evaluate the model if we're looking at dev or train data
-		
 		AccuracyEvaluator eval = new AccuracyEvaluator();
 		double accuracy = eval.evaluate(instances, trainedPredictor);
 		System.out.println("Train: " + accuracy);
+		
+		/*for(double u = 1; u<11; u++) {
+			for(double b = 1; b<11; b++) {
+		        trainedPredictor = new LoanPredictor(10, u*1E-11, b*77000);
+		        trainedPredictor.train(instances);
+				eval = new AccuracyEvaluator();
+				accuracy = eval.evaluate(instances, trainedPredictor);
+				System.out.println("Train: " + accuracy);
+			}
+		}*/
+
+		
 		return trainedPredictor;
 	}
 
@@ -141,13 +92,17 @@ public class Classify {
 			List<Instance> instances, String predictions_file) throws IOException {
 		PredictionsWriter writer = new PredictionsWriter(predictions_file);
 		// Evaluate the model if labels are available. 
-		//AccuracyEvaluator eval = new AccuracyEvaluator();
-		//double accuracy = eval.evaluate(instances, predictor);
-		//System.out.println("Test: " + accuracy);
-		for (Instance instance : instances) {
+		AccuracyEvaluator eval = new AccuracyEvaluator();
+		double accuracy = eval.evaluate(instances, predictor);
+		System.out.println("Test: " + accuracy);
+		/*for (Instance instance : instances) {
 			Label label = predictor.predict(instance);
 			writer.writePrediction(label);
-		}
+		}*/
+		
+		System.out.println("Recall   : " + (predictor.getRecall()));
+		System.out.println("Precision: " + (predictor.getPrecision()));
+		predictor.reset();
 		
 		writer.close();
 		
