@@ -12,6 +12,10 @@ public class LoanPredictor extends Predictor {
 	private ArrayList<Instance> supports = new ArrayList<>();
 	private double U = 0.0;
 	private double bias = 0.0;
+	public double tp = 0;
+	public double fp = 0;
+	public double tn = 0;
+	public double fn = 0;
 
 	public LoanPredictor(int sgd_iterations, double U, double bias) {
 	    this.sgd_iterations = sgd_iterations;
@@ -28,11 +32,22 @@ public class LoanPredictor extends Predictor {
 		// There is an alpha for each sample.
 		alpha = new double[instances.size()];
 
+		int ones = 0;
+		int all = 0;
 		for(Instance instance : instances) {
 			for(Integer feature : instance.getFeatureVector().getMap().keySet()) {
 				weights.put(feature, 0.0);
 			}
+			double label = Integer.parseInt(instance.getLabel().toString())*2 - 1;
+			if(label == 1) {
+				ones++;
+			}
+			all++;
 		}
+		System.out.println(ones);
+		System.out.println(all);
+		System.out.println(ones/all);
+		
 		
 		/* Normalization */
 		/*HashMap<Integer, Double> min = new HashMap<>();
@@ -157,9 +172,42 @@ public class LoanPredictor extends Predictor {
 			result += (Integer.parseInt(inst._label.toString())*2-1)*val;
 		}
 
-		return result < 0 ? new ClassificationLabel(0) : new ClassificationLabel(1);
+		String label = instance.getLabel().toString();
+		ClassificationLabel resultLabel;
+		if(result < 0) {
+			resultLabel = new ClassificationLabel(0);
+			if(label.equals("0")) {
+				tn++;
+			}else{
+				fp++;
+			}
+		}else{
+			resultLabel = new ClassificationLabel(1);
+			if(label.equals("0")) {
+				fn++;
+			}else{
+				tp++;
+			}
+		}
+		return resultLabel;
 	}
-
 	
+	@Override
+	public double getPrecision() {
+		return tp / (tp+fp);
+	}
+	
+	@Override
+	public double getRecall() {
+		return tp / (tp+fn);
+	}
+	
+	@Override
+	public void reset() {
+		tp = 0;
+		fp = 0;
+		tn = 0;
+		fn = 0;
+	}
 	
 }
