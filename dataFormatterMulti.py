@@ -2,7 +2,7 @@ import csv
 import sys
 from textblob import TextBlob
 
-target = open("CleanedFile.dev", 'w')
+target = open("CleanedFileMulti.dev", 'w')
 target2 = open("DataDictionary", "w")
 
 noFormatting = [2, 3, 4, 7, 13, 24, 25, 30]
@@ -87,6 +87,7 @@ with open(sys.argv[1], 'rb') as csvFile:
                 except UnicodeDecodeError:
                     target.write("51:0 ")
 
-        target.write("50:10")
+        target.write("50:10 ")
+        target.write("12:" + str(row[12]))
 
         target.write("\n")

@@ -15,4 +15,8 @@ public abstract class Predictor implements Serializable {
 	public abstract void train(List<Instance> instances);
 	
 	public abstract Label predict(Instance instance);
+	
+	public abstract String getName();
+	
+	public abstract void setName(String s);
 }
